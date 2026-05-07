@@ -76,7 +76,7 @@ def plot_timings(timing_dict, use_custom_update: bool, fig_name_concat:str=""):
     del timing_dict['preparation']
 
     # plot
-    fig = plt.figure(figsize=(6.0, 2.1))
+    fig = plt.figure(figsize=(4.0, 1.8))
     ax = fig.add_subplot(111)
     ax.boxplot(timing_dict.values(), vert=False,
             #    flierprops=green_square,
@@ -245,6 +245,51 @@ def plot_multiple_trajectories(cfg: MPCParam, traj_ref:np.ndarray, list_traj_lab
         axes[3][idx].plot(ts, traj_u[:, 1], color="tab:blue")
 
     fig_filename = os.path.join("figures", f"diff_drive_sim_vel_acc_trajectories.pdf")
+    plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
+    print(f"stored figure in {fig_filename}")
+    
+    ########
+    ### Distance to obstacles over time
+    ##########
+
+    list_linestyle = ["-", ':', "-.", "-"]
+
+    fig = plt.figure(102)
+    ax = fig.add_subplot(1,1,1)
+    time_vec = np.arange(0, list_traj_label_tuple[0][1].shape[0]) * cfg.delta_t
+
+    plt.plot([time_vec[0], time_vec[-1]], [0, 0], color='k', linestyle='--', label="collision boundary")
+
+    for idx, traj_label_tuple in enumerate(list_traj_label_tuple):
+        
+        traj_zo = traj_label_tuple[1]
+        min_dist = np.inf
+        for i_obs, idx_obs in enumerate(range(cfg.num_obs)):
+            dist_obs = np.linalg.norm(traj_zo[:,:2] - cfg.obs_pos[idx_obs,:], axis=1) - cfg.obs_radius[idx_obs]
+            min_dist = np.min([min_dist, np.min(dist_obs)])
+            ax.plot(time_vec, dist_obs, color=list_color[idx], linestyle = list_linestyle[i_obs], label=f"{traj_label_tuple[0]}, obs {idx_obs+1}" if i_obs == 0 else None)
+        print(f"min distance to obstacles for {traj_label_tuple[0]}: {min_dist:.3e} m")
+
+    ax.set_xlabel(r"Time $t$ in s")
+    ax.set_ylabel(r"Distance in m")
+    if closed_loop:
+        # ax.set_xticks(np.arange(-2., 9., 2.))
+        # ax.set_yticks(np.arange(0., 5., 2.))
+        # ax.set_ylim([-.5, 3.6])
+        # ax.set_ylim([-.3, 2.2])
+        ax.set_xlim([0, time_vec[-1]])
+        ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1), ncol=2)
+    else:
+        ax.legend()
+
+    plt.tight_layout()
+    # plt.grid()
+    if not os.path.exists("figures"):
+        os.makedirs("figures")
+    # small hack to have relatively larger fontsize
+    # fig.set_figwidth(fig.get_figwidth() * .9)
+
+    fig_filename = os.path.join("figures", f"diff_drive_sim_multiple_distances.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 
