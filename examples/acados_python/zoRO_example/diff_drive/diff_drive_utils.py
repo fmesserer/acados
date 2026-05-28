@@ -76,7 +76,8 @@ def plot_timings(timing_dict, use_custom_update: bool, fig_name_concat:str=""):
     del timing_dict['preparation']
 
     # plot
-    fig = plt.figure(figsize=(4.0, 1.8))
+    fig = plt.figure(figsize=(6.0, 2.1))
+    # fig = plt.figure(figsize=(4.0, 1.8))
     ax = fig.add_subplot(111)
     ax.boxplot(timing_dict.values(), vert=False,
             #    flierprops=green_square,
